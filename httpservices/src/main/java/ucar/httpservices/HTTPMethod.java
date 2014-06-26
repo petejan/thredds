@@ -48,7 +48,6 @@ import org.apache.http.auth.AuthScope;
 import org.apache.http.client.methods.*;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.message.BasicHttpResponse;
-import org.apache.http.params.HttpParams;
 import org.apache.http.util.EntityUtils;
 
 import static ucar.httpservices.HTTPSession.*;
