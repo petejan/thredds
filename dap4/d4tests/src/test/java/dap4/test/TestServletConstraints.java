@@ -343,6 +343,7 @@ public class TestServletConstraints extends DapTestCommon
             }
             if(!pass) break;
         }
+        if(!pass) {System.err.println("Test failed: "+testcase); System.err.flush();}
         return pass;
     }
 
