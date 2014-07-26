@@ -325,11 +325,6 @@ public class HTTPMethod implements AutoCloseable
                 }
             }
 
-            // Apply settings
-            configure(this.request);
-            setcontent(this.request);
-            AuthScope scope = setAuthentication();
-
             //todo: Change the retry handler
             //httpclient.setHttpRequestRetryHandler(myRetryHandler);
             //request.getParams().setParameter(HttpMethodParams.RETRY_HANDLER, new RetryHandler());
@@ -437,8 +432,8 @@ public class HTTPMethod implements AutoCloseable
         }
     }
 
-    //////////////////////////////////////////////////
-    // Accessors
+        //////////////////////////////////////////////////
+        // Accessors
 
     public int getStatusCode()
     {
