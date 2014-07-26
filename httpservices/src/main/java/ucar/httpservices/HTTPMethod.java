@@ -43,8 +43,11 @@ import java.util.*;
 
 import org.apache.http.*;
 import org.apache.http.auth.AuthScope;
+import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.*;
+import org.apache.http.impl.client.*;
+import org.apache.http.impl.conn.DefaultProxyRoutePlanner;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.message.BasicHttpResponse;
 import org.apache.http.util.EntityUtils;
@@ -288,11 +291,6 @@ public class HTTPMethod implements AutoCloseable
                 }
             }
 
-            // Apply settings
-            configure(this.request);
-            setcontent(this.request);
-            AuthScope scope = setAuthentication();
-
             //todo: Change the retry handler
             //httpclient.setHttpRequestRetryHandler(myRetryHandler);
             //request.getParams().setParameter(HttpMethodParams.RETRY_HANDLER, new RetryHandler());
@@ -390,10 +388,7 @@ public class HTTPMethod implements AutoCloseable
             }
             methodstream = null;
         }
-        if(this.response != null) {
-            this.response.
-            this.response = null;
-        }
+        this.response = null;
         if(session != null) {
             session.removeMethod(this);
             if(localsession) {
@@ -403,8 +398,8 @@ public class HTTPMethod implements AutoCloseable
         }
     }
 
-    //////////////////////////////////////////////////
-    // Accessors
+        //////////////////////////////////////////////////
+        // Accessors
 
     public int getStatusCode()
     {
