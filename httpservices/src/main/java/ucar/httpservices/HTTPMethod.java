@@ -305,7 +305,57 @@ public class HTTPMethod implements AutoCloseable
         this.content = null; // do not reuse
     }
 
-    //////////////////////////////////////////////////
+    public int execute()
+        throws HTTPException
+    {
+        if(closed)
+            throw new HTTPException("HTTPMethod: attempt to execute closed method");
+        if(this.legalurl == null)
+            throw new HTTPException("HTTPMethod: no url specified");
+        if(!localsession && !sessionCompatible(this.legalurl))
+            throw new HTTPException("HTTPMethod: session incompatible url: " + this.legalurl);
+
+        this.request = createRequest();
+
+        try {
+            // Add any defined headers
+            if(headers.size() > 0) {
+                for(Header h : headers) {
+                    request.addHeader(h);
+                }
+            }
+
+            // Apply settings
+            configure(this.request);
+            setcontent(this.request);
+            AuthScope scope = setAuthentication();
+
+            //todo: Change the retry handler
+            //httpclient.setHttpRequestRetryHandler(myRetryHandler);
+            //request.getParams().setParameter(HttpMethodParams.RETRY_HANDLER, new RetryHandler());
+
+            //todo: get the protocol and port
+            //URL hack = new URL(this.legalurl);
+            //Protocol handler = session.getProtocol(hack.getProtocol(),
+            //    hack.getPort());
+            //HostConfiguration hc = session.sessionClient.getHostConfiguration();
+            //hc = new HostConfiguration(hc);
+            //hc.setHost(hack.getHost(), hack.getPort(), handler);
+
+            this.response = session.execute(request);
+            int code = response.getStatusLine().getStatusCode();
+
+            // On authorization error, clear entries from the credentials cache
+            if(code == HttpStatus.SC_UNAUTHORIZED
+                || code == HttpStatus.SC_PROXY_AUTHENTICATION_REQUIRED) {
+                HTTPCachingProvider.invalidate(scope);
+            }
+            return code;
+
+        } catch (Exception ie) {
+            throw new HTTPException(ie);
+        }
+    }
 
     protected RequestConfig
     configure(HttpRequestBase request)
