@@ -936,9 +936,9 @@
     <com.sleepycat.version>4.0.92</com.sleepycat.version>
     <commons-fileupload.version>1.2.2</commons-fileupload.version>
     <org.apache.commons.commons-lang3>3.3.2</org.apache.commons.commons-lang3>
-    <org.apache.httpcomponents.httpcore.version>4.3.2</org.apache.httpcomponents.httpcore.version>
-    <org.apache.httpcomponents.httpclient.version>4.3.4</org.apache.httpcomponents.httpclient.version>
-    <org.apache.httpcomponents.httpmime.version>4.3.4</org.apache.httpcomponents.httpmime.version>
+    <org.apache.httpcomponents.httpcore.version>4.4.1</org.apache.httpcomponents.httpcore.version>
+    <org.apache.httpcomponents.httpclient.version>4.4</org.apache.httpcomponents.httpclient.version>
+    <org.apache.httpcomponents.httpmime.version>4.4</org.apache.httpcomponents.httpmime.version>
     <commons-io.version>2.4</commons-io.version>
     <commons-compress.version>1.8.1</commons-compress.version>
     <javax.servlet.version>3.1.0</javax.servlet.version>

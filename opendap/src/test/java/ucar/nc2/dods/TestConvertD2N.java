@@ -160,7 +160,7 @@ public class TestConvertD2N {
         Variable v = (Variable) vars.get(i);
         Array data = v.read();
         if (showData)
-          NCdumpW.printArray(data, v.getFullName() + data.shapeToString(), System.out, null);
+          NCdumpW.printArray(data, v.getFullName() + data.shapeToString(), new PrintWriter(System.out), null);
       }
     }
 
@@ -178,7 +178,7 @@ public class TestConvertD2N {
       }
 
       if (showData)
-        NCdumpW.printArray(data, v.getFullName()+data.shapeToString(), System.out, null);
+        NCdumpW.printArray(data, v.getFullName()+data.shapeToString(), new PrintWriter(System.out), null);
     }
 
   }

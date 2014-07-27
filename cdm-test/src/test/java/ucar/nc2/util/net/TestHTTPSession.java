@@ -32,6 +32,8 @@
 
 package ucar.nc2.util.net;
 
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.HttpRequestBase;
 import ucar.httpservices.*;
 
 import org.apache.http.*;
@@ -137,43 +139,41 @@ public class TestHTTPSession extends UnitTestCommon
         method.execute();
 
         // Use special interface to access the request
-        AbstractHttpMessage dbgreq = (AbstractHttpMessage) method.debugRequest();
+        HttpRequestBase dbgreq = method.debugRequest();
+        RequestConfig dbgrc = dbgreq.getConfig();
 
-        /*  no longer used
+        boolean b;
+        int n;
+
         System.out.println("Test: Redirects Handled");
-        b = dbgreq.getParams().getBooleanParameter(HANDLE_REDIRECTS, false);
+        b = dbgrc.isRedirectsEnabled();
         assertTrue("*** Fail: Redirects Handled", b);
         System.out.println("*** Pass: Redirects Handled");
-        */
 
-        boolean b = dbgreq.getParams().getBooleanParameter(HTTPSession.ALLOW_CIRCULAR_REDIRECTS, true);
+        b = dbgrc.isCircularRedirectsAllowed();
         System.out.println("Test: Circular Redirects");
         assertTrue("*** Fail: Circular Redirects", b);
         System.out.println("*** Pass: Circular Redirects");
 
         System.out.println("Test: Max Redirects");
-        int n = dbgreq.getParams().getIntParameter(MAX_REDIRECTS, -1);
+        n = dbgrc.getMaxRedirects();
         assertTrue("*** Fail: Max Redirects", n == 111);
         System.out.println("*** Pass: Max Redirects");
 
         System.out.println("Test: SO Timeout");
-        n = dbgreq.getParams().getIntParameter(SO_TIMEOUT, -1);
+        n = dbgrc.getSocketTimeout();
         assertTrue("*** Fail: SO Timeout", n == 17777);
         System.out.println("*** Pass: SO Timeout");
 
         System.out.println("Test: Connection Timeout");
-        n = dbgreq.getParams().getIntParameter(CONN_TIMEOUT, -1);
+        n = dbgrc.getConnectTimeout();
         assertTrue("*** Fail: Connection Timeout", n == 37777);
         System.out.println("*** Pass: SO Timeout");
 
-        /* no longer used
-        System.out.println("Test: Authentication Handled");
-        b = dbgreq.getParams().getBooleanParameter(HANDLE_AUTHENTICATION, false);
-        assertTrue("*** Fail: Authentication Handled", b);
-        System.out.println("*** Pass: Authentication Handled");
-         */
-
-
+        System.out.println("Test: Authentication Enabled");
+        b = dbgrc.isAuthenticationEnabled();
+        assertTrue("*** Fail: Authentication Enabled", b);
+        System.out.println("*** Pass: Authentication Enabled");
 
         session.close();
     }

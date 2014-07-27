@@ -479,8 +479,8 @@ public class DConnect2
         if(debugHeaders)
             DAPNode.log.debug("OpenConnection Headers for " + method.getPath());
 
+        /*
         List<Cookie> cookies = HTTPSession.getGlobalCookies();
-
         if(cookies.size() > 0) {
             if(debugHeaders) DAPNode.log.debug("Cookies= ");
             for(Cookie cooky : cookies) {
@@ -489,6 +489,7 @@ public class DConnect2
                     hasSession = true;
             }
         }
+        */
     }
 
     private interface Command

@@ -46,6 +46,8 @@ import ucar.nc2.util.UnitTestCommon;
 import ucar.unidata.test.util.TestDir;
 
 import java.io.*;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
 
@@ -298,8 +300,9 @@ public class TestAuth extends UnitTestCommon
             if(pass) {
                 session.clearState();
                 // Test global credentials provider
+                URI uri = new URI(data.url);
                 AuthScope scope
-                        = HTTPAuthScope.urlToScope(data.url, HTTPAuthPolicy.BASIC, null);
+                    = HTTPAuthScope.uriToScope(HTTPAuthPolicy.BASIC, uri, null);
                 HTTPSession.setGlobalCredentials(scope, cred);
                 session = HTTPFactory.newSession(data.url);
                 method = HTTPFactory.Get(session);
@@ -424,8 +427,9 @@ public class TestAuth extends UnitTestCommon
             if(pass) {
                 session.clearState();
                 // Test global credentials provider
+                URI uri = new URI(data.url);
                 AuthScope scope
-                        = HTTPAuthScope.urlToScope(data.url, HTTPAuthPolicy.BASIC, null);
+                    = HTTPAuthScope.uriToScope(HTTPAuthPolicy.BASIC, uri, null);
                 HTTPSession.setGlobalCredentials(scope, cred);
                 session = HTTPFactory.newSession(data.url);
                 method = HTTPFactory.Get(session);
@@ -479,8 +483,9 @@ public class TestAuth extends UnitTestCommon
             throw new Exception("Cannot read client key store: " + keystore);
 
         CredentialsProvider provider = new HTTPSSLProvider(keystore, CLIENTPWD);
+        URI uri = new URI(url);
         AuthScope scope
-                = HTTPAuthScope.urlToScope(url, HTTPAuthPolicy.SSL, null);
+            = HTTPAuthScope.uriToScope(HTTPAuthPolicy.SSL, uri, null);
         HTTPSession.setGlobalCredentialsProvider(scope, provider);
 
         HTTPSession session = HTTPFactory.newSession(url);
@@ -519,18 +524,14 @@ public class TestAuth extends UnitTestCommon
         // Add some entries to an HTTPAuthStore
         HTTPAuthStore store = new HTTPAuthStore();
 
-        scope = HTTPAuthScope.urlToScope(
-                "http://ceda.ac.uk/dap/neodc/casix/seawifs_plankton/data/monthly/PSC_monthly_1998.nc.dds",
-                HTTPAuthPolicy.BASIC, null);
+        URI uri = new URI("http://ceda.ac.uk/dap/neodc/casix/seawifs_plankton/data/monthly/PSC_monthly_1998.nc.dds");
+        scope = HTTPAuthScope.uriToScope(HTTPAuthPolicy.BASIC, uri, null);
         store.insert(HTTPAuthScope.ANY_PRINCIPAL, scope, credp1);
 
-        scope = HTTPAuthScope.urlToScope("http://ceda.ac.uk",
-                HTTPAuthPolicy.SSL, null);
-
+        scope = HTTPAuthScope.uriToScope(HTTPAuthPolicy.SSL, new URI("http://ceda.ac.uk"), null);
         store.insert(HTTPAuthScope.ANY_PRINCIPAL, scope, credp2);
 
-        scope = HTTPAuthScope.urlToScope("http://ceda.ac.uk",
-                HTTPAuthPolicy.BASIC, null);
+        scope = HTTPAuthScope.uriToScope(HTTPAuthPolicy.BASIC, new URI("http://ceda.ac.uk"),null);
         store.insert(HTTPAuthScope.ANY_PRINCIPAL, scope, credp3);
 
         // Remove any old file
