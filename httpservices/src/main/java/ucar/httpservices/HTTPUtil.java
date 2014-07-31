@@ -141,18 +141,16 @@ abstract public class HTTPUtil
     static public class InterceptRequest extends InterceptCommon
         implements HttpRequestInterceptor
     {
-        HttpRequest req = null;
-
         synchronized public void
         process(HttpRequest request, HttpContext context)
             throws HttpException, IOException
         {
-            this.req = request;
+            this.request = request;
             this.context = context;
             if(this.printheaders)
                 printHeaders();
-            else if(this.req != null) {
-                Header[] hdrs = this.req.getAllHeaders();
+            else if(this.request != null) {
+                Header[] hdrs = this.request.getAllHeaders();
                 for(int i = 0;i < hdrs.length;i++)
                     headers.add(hdrs[i]);
             }

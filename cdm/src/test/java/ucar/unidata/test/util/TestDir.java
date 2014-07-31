@@ -96,17 +96,19 @@ public class TestDir {
 
   static public String threddsTestServer = "remotetest.unidata.ucar.edu";
 
-  // DAP 2 Test server (for testing)
+    static public String remoteTestServer = "remotetest.unidata.ucar.edu";
 
-  static public String dap2TestServerPropName = "dts";
+  // DAP2 Test server (for testing)
 
-  static public String dap2TestServer = "remotetest.unidata.ucar.edu";
+  static public String dap3TestServerPropName = "dts";
+
+  static public String dapTestServer = remoteTestServer;
 
   // DAP4 Test server (for testing)
 
   static public String dap4TestServerPropName = "d4ts";
 
-  static public String dap4TestServer = "remotetest.unidata.ucar.edu";
+  static public String dap4TestServer = remoteTestServer;
 
   //////////////////////////////////////////////////
 

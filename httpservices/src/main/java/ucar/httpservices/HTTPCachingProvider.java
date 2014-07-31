@@ -56,6 +56,9 @@ import java.util.List;
  * repeatedly calls the server in checkifdods() with
  * a new HTTPSession, so we get repeated requests to
  * the credentials provider.
+ *
+ * Note for apache httpclient 4.3: not clear if this is still
+ * needed or if BasicCredentialsProvider handles caching.
  */
 
 public class HTTPCachingProvider implements CredentialsProvider
