@@ -96,7 +96,7 @@ public class TestDir {
 
   static public String threddsTestServer = "remotetest.unidata.ucar.edu";
 
-    static public String remoteTestServer = "remotetest.unidata.ucar.edu";
+  static public String remoteTestServer = "remotetest.unidata.ucar.edu";
 
   // DAP2 Test server (for testing)
 
