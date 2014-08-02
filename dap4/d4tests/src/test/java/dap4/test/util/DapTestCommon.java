@@ -288,7 +288,7 @@ public class DapTestCommon extends TestCase
         try {
             HTTPSession session = new HTTPSession(candidate);
             HTTPMethod method = HTTPFactory.Get(session);
-            method.execute();
+            int status = method.execute();
             String s = method.getResponseAsString();
             session.close();
             System.err.println(" ; found");

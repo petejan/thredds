@@ -34,11 +34,13 @@
 package ucar.httpservices;
 
 import org.apache.http.*;
+import org.apache.http.client.entity.GzipDecompressingEntity;
+import org.apache.http.entity.AbstractHttpEntity;
+import org.apache.http.message.BasicHeader;
 import org.apache.http.protocol.HttpContext;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 abstract public class HTTPUtil
 {
@@ -156,6 +158,44 @@ abstract public class HTTPUtil
             }
         }
     }
+
+    /**
+     * Temporary hack to remove Content-Encoding: XXX-Endian headers
+     */
+    static public class ContentEncodingInterceptor extends InterceptCommon
+        implements HttpResponseInterceptor
+    {
+        synchronized public void
+        process(HttpResponse response, HttpContext context)
+            throws HttpException, IOException
+        {
+            if(response == null) return;
+            Header[] hdrs = response.getAllHeaders();
+            if(hdrs == null) return;
+            boolean modified = false;
+            for(int i=0;i < hdrs.length;i++) {
+                Header h = hdrs[i];
+                if(!h.getName().equalsIgnoreCase("content-encoding")) continue;
+                String value = h.getValue();
+                if(value.trim().toLowerCase().endsWith("-endian")) {
+                    hdrs[i] = new BasicHeader("X-Content-Encoding",value);
+                    modified = true;
+                }
+            }
+            if(modified)
+                response.setHeaders(hdrs);
+            // Similarly, suppress encoding for Entity
+            HttpEntity entity= response.getEntity();
+            Header ceheader = entity.getContentEncoding();
+            if (ceheader != null) {
+                String value = ceheader.getValue();
+                if(value.trim().toLowerCase().endsWith("-endian")) {
+                    int x = 0;//entity.setContentEncoding(new BasicHeader("Content-Encoding","Identity"));
+                }
+            }
+        }
+    }
+
 
     //////////////////////////////////////////////////
     // Misc.
