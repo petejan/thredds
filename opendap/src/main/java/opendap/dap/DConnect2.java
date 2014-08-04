@@ -264,22 +264,30 @@ public class DConnect2
             if(allowSessions)
                 method.setRequestHeader("X-Accept-Session", "true");
 
-            int statusCode = method.execute();
+            int tries = 3;
+            boolean tryagain = true;
+            do {
+                int statusCode = method.execute();
 
-            // debug
-            // if (debugHeaders) ucar.httpservices.HttpClientManager.showHttpRequestInfo(f, method);
+                // debug
+                // if (debugHeaders) ucar.httpservices.HttpClientManager.showHttpRequestInfo(f, method);
 
-            if(statusCode == HttpStatus.SC_NOT_FOUND) {
-                throw new DAP2Exception(DAP2Exception.NO_SUCH_FILE, method.getStatusText() + ": " + urlString);
-            }
+                switch (statusCode) {
+                case HttpStatus.SC_OK:
+                    tryagain = false;
+                    break;
+                case HttpStatus.SC_NOT_FOUND:
+                    throw new DAP2Exception(DAP2Exception.NO_SUCH_FILE, method.getStatusText() + ": " + urlString);
+                case HttpStatus.SC_UNAUTHORIZED:
+                    throw new InvalidCredentialsException(method.getStatusText());
+                case HttpStatus.SC_SERVICE_UNAVAILABLE:
+                    tryagain = true;
+                    break;
+                default:
+                    throw new DAP2Exception("Method failed:" + method.getStatusText() + " on URL= " + urlString);
+                }
 
-            if(statusCode == HttpStatus.SC_UNAUTHORIZED) {
-                throw new InvalidCredentialsException(method.getStatusText());
-            }
-
-            if(statusCode != HttpStatus.SC_OK) {
-                throw new DAP2Exception("Method failed:" + method.getStatusText() + " on URL= " + urlString);
-            }
+            } while(tries-- > 0 && tryagain);
 
             // Get the response body.
             is = method.getResponseAsStream();
@@ -287,7 +295,7 @@ public class DConnect2
             // check if its an error
             Header header = method.getResponseHeader("Content-Description");
             if(header != null && (header.getValue().equals("dods-error")
-                || header.getValue().equals("dods_error"))) {
+                    || header.getValue().equals("dods_error"))) {
                 // create server exception object
                 DAP2Exception ds = new DAP2Exception();
                 // parse the Error object from stream and throw it
@@ -343,7 +351,7 @@ public class DConnect2
     }
 
     static public String captureStream(InputStream is)
-        throws IOException
+            throws IOException
     {
         ByteArrayOutputStream text = new ByteArrayOutputStream();
         int b;
@@ -359,7 +367,7 @@ public class DConnect2
     static final byte[] tag2 = "\nData:\r\n".getBytes(UTF8);
 
     static public String captureDataDDS(InputStream is)
-        throws IOException
+            throws IOException
     {
         byte[] text = new byte[4096];
         int pos = 0;
@@ -395,7 +403,7 @@ public class DConnect2
 
         if(pos < taglen) return false;
 
-        for(j = 0, i = pos - taglen;i < pos;i++, j++) {
+        for(j = 0, i = pos - taglen; i < pos; i++, j++) {
             if(text[i] != tag[j]) return false;
         }
         return true;
@@ -405,7 +413,9 @@ public class DConnect2
     {
         if(len - pos >= n) return text;
         int newlen = len * 2 + n;
-        while(newlen < n) newlen++;
+        while(newlen < n) {
+            newlen++;
+        }
         byte[] newtext = new byte[newlen];
         System.arraycopy(text, 0, newtext, 0, len);
         return newtext;
@@ -453,7 +463,7 @@ public class DConnect2
         }
 
         Header[] responseHeaders = method.getResponseHeaders();
-        for(int i1 = 0;i1 < responseHeaders.length;i1++) {
+        for(int i1 = 0; i1 < responseHeaders.length; i1++) {
             Header responseHeader = responseHeaders[i1];
             if(debugHeaders) DAPNode.log.debug("  " + responseHeader);
             String key = responseHeader.getName();
@@ -745,7 +755,7 @@ public class DConnect2
      * @opendap.ddx.experimental
      */
     public DataDDS getDataDDX() throws MalformedURLException, IOException,
-        ParseException, DDSException, DAP2Exception
+            ParseException, DDSException, DAP2Exception
     {
 
         return getDataDDX("", new DefaultFactory());
@@ -770,7 +780,7 @@ public class DConnect2
      * @opendap.ddx.experimental
      */
     public DataDDS getDataDDX(String CE) throws MalformedURLException, IOException,
-        ParseException, DDSException, DAP2Exception
+            ParseException, DDSException, DAP2Exception
     {
 
         return getDataDDX(CE, new DefaultFactory());
@@ -797,7 +807,7 @@ public class DConnect2
      * @see BaseTypeFactory
      */
     public DataDDS getDataDDX(String CE, BaseTypeFactory btf) throws MalformedURLException, IOException,
-        ParseException, DDSException, DAP2Exception
+            ParseException, DDSException, DAP2Exception
     {
 
         DataDDXCommand command = new DataDDXCommand(btf,this.ver);
@@ -851,7 +861,7 @@ public class DConnect2
      * @throws DAP2Exception         if any error returned by the remote server
      */
     public DataDDS getData(String CE, StatusUI statusUI, BaseTypeFactory btf) throws MalformedURLException, IOException,
-        ParseException, DDSException, DAP2Exception
+            ParseException, DDSException, DAP2Exception
     {
         if(CE != null && CE.trim().length() == 0) CE = null;
         DataDDS dds = new DataDDS(ver, btf);
@@ -1167,7 +1177,7 @@ return dds;
      * @throws DAP2Exception         if any error returned by the remote server
      */
     public DataDDS getData(String CE, StatusUI statusUI) throws MalformedURLException, IOException,
-        ParseException, DDSException, DAP2Exception
+            ParseException, DDSException, DAP2Exception
     {
 
         return getData(CE, statusUI, new DefaultFactory());
@@ -1232,7 +1242,7 @@ return getDDXData(CE, statusUI, new DefaultFactory());
      * @throws DAP2Exception         if any error returned by the remote server
      */
     public final DataDDS getData(StatusUI statusUI) throws MalformedURLException, IOException,
-        ParseException, DDSException, DAP2Exception
+            ParseException, DDSException, DAP2Exception
     {
         return getData("", statusUI, new DefaultFactory());
     }
