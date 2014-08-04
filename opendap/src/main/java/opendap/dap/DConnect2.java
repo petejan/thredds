@@ -264,9 +264,6 @@ public class DConnect2
             if(allowSessions)
                 method.setRequestHeader("X-Accept-Session", "true");
 
-            int tries = 3;
-            boolean tryagain = true;
-            do {
                 int statusCode = method.execute();
 
                 // debug
@@ -274,21 +271,16 @@ public class DConnect2
 
                 switch (statusCode) {
                 case HttpStatus.SC_OK:
-                    tryagain = false;
                     break;
+
                 case HttpStatus.SC_NOT_FOUND:
                     throw new DAP2Exception(DAP2Exception.NO_SUCH_FILE, method.getStatusText() + ": " + urlString);
                 case HttpStatus.SC_UNAUTHORIZED:
                     throw new InvalidCredentialsException(method.getStatusText());
-                case HttpStatus.SC_SERVICE_UNAVAILABLE:
-                    tryagain = true;
-                    Thread.sleep(1000);
-                    break;
+
                 default:
                     throw new DAP2Exception("Method failed:" + method.getStatusText() + " on URL= " + urlString);
                 }
-
-            } while(tries-- > 0 && tryagain);
 
             // Get the response body.
             is = method.getResponseAsStream();
