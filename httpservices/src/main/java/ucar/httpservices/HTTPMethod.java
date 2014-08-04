@@ -587,11 +587,6 @@ public class HTTPMethod implements AutoCloseable
         return ver;
     }
 
-    public String getSoTimeout()
-    {
-        return request == null ? null : "" + request.getParams().getParameter(SO_TIMEOUT);
-    }
-
     public String getStatusText()
     {
         return getStatusLine();
