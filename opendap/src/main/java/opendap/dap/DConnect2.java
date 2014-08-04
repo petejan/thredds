@@ -282,6 +282,7 @@ public class DConnect2
                     throw new InvalidCredentialsException(method.getStatusText());
                 case HttpStatus.SC_SERVICE_UNAVAILABLE:
                     tryagain = true;
+                    Thread.sleep(1000);
                     break;
                 default:
                     throw new DAP2Exception("Method failed:" + method.getStatusText() + " on URL= " + urlString);
