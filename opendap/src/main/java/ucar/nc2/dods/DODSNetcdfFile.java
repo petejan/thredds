@@ -108,7 +108,7 @@ public class DODSNetcdfFile extends ucar.nc2.NetcdfFile
      */
     static public void setAllowDeflate(boolean b)
     {
-        accept_compress = b;
+        setAllowCompression(b);
     }
 
     /**

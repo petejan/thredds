@@ -183,19 +183,19 @@ public class HTTPMethod implements AutoCloseable
     // Constructor(s)
 
     public HTTPMethod(HTTPSession.Methods m)
-        throws HTTPException
+            throws HTTPException
     {
         this(m, null, null);
     }
 
     public HTTPMethod(HTTPSession.Methods m, String url)
-        throws HTTPException
+            throws HTTPException
     {
         this(m, null, url);
     }
 
     public HTTPMethod(HTTPSession.Methods m, HTTPSession session, String url)
-        throws HTTPException
+            throws HTTPException
     {
         if(url == null && session != null)
             url = session.getURL();
@@ -228,7 +228,7 @@ public class HTTPMethod implements AutoCloseable
      * then send to HTTPSession to do the bulk of the work.
      */
     public int execute()
-        throws HTTPException
+            throws HTTPException
     {
         if(closed)
             throw new HTTPException("HTTPMethod: attempt to execute closed method");
@@ -255,7 +255,7 @@ public class HTTPMethod implements AutoCloseable
 
     protected HttpRequestBase
     createRequest()
-        throws HTTPException
+            throws HTTPException
     {
         HttpRequestBase method = null;
 
@@ -398,13 +398,13 @@ public class HTTPMethod implements AutoCloseable
     public String getStatusLine()
     {
         return this.response == null ? null
-            : this.response.getStatusLine().toString();
+                : this.response.getStatusLine().toString();
     }
 
     public String getPath()
     {
         return (this.request == null ? null
-            : this.request.getURI().toString());
+                : this.request.getURI().toString());
     }
 
     public boolean canHoldContent()
@@ -606,6 +606,13 @@ public class HTTPMethod implements AutoCloseable
         //ignore ; always done
     }
 
+    public void
+    setAllowCompression()
+    {
+        if(this.session != null)
+            this.session.setAllowCompression();
+    }
+
     public String getResponseCharSet()
     {
         return "UTF-8";
@@ -664,8 +671,8 @@ public class HTTPMethod implements AutoCloseable
         if(u2 == null) return false;
 
         if(u1.equals(u2)
-            || u1.startsWith(u2)
-            || u2.startsWith(u1)) return true;
+                || u1.startsWith(u2)
+                || u2.startsWith(u1)) return true;
 
         // Check piece by piece
         URI uu1;
@@ -697,7 +704,7 @@ public class HTTPMethod implements AutoCloseable
         String s1 = uu1.getScheme();
         String s2 = uu2.getScheme();
         if((s1 != null || s2 != null)
-            && s1 != null && s2 != null && !s1.equals(s2))
+                && s1 != null && s2 != null && !s1.equals(s2))
             return false;
 
         // Match user info; differs from table above
@@ -709,14 +716,14 @@ public class HTTPMethod implements AutoCloseable
         s1 = uu1.getUserInfo();
         s2 = uu2.getUserInfo();
         if(s1 != null
-            && (s2 == null || !s1.equals(s2)))
+                && (s2 == null || !s1.equals(s2)))
             return false;
 
         // hosts must be same
         s1 = uu1.getHost();
         s2 = uu2.getHost();
         if((s1 != null || s2 != null)
-            && s1 != null && s2 != null && !s1.equals(s2))
+                && s1 != null && s2 != null && !s1.equals(s2))
             return false;
 
         // ports must be the same
@@ -734,7 +741,7 @@ public class HTTPMethod implements AutoCloseable
         s1 = uu1.getRawPath();
         s2 = uu2.getRawPath();
         if((s1 != null || s2 != null)
-            && s1 != null && s2 != null && !(s1.startsWith(s2) || s2.startsWith(s1)))
+                && s1 != null && s2 != null && !(s1.startsWith(s2) || s2.startsWith(s1)))
             return false;
 
         return true;

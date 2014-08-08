@@ -6366,8 +6366,6 @@ public class ToolsUI extends JPanel {
       for (String arg : args) {
         System.out.println(" " + arg);
       }
-
-        HTTPSession.debugHeaders(true);
     }
 
     //////////////////////////////////////////////////////////////////////////

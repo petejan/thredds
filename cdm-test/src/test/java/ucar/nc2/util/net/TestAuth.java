@@ -151,7 +151,7 @@ public class TestAuth extends UnitTestCommon
         {
             UsernamePasswordCredentials creds = new UsernamePasswordCredentials(username, password);
             System.err.printf("TestCredentials.getCredentials called: creds=|%s| host=%s port=%d%n",
-                creds.toString(), scope.getHost(), scope.getPort());
+                    creds.toString(), scope.getHost(), scope.getPort());
             this.callcount++;
             return creds;
         }
@@ -166,14 +166,14 @@ public class TestAuth extends UnitTestCommon
 
         // Serializable Interface
         private void writeObject(java.io.ObjectOutputStream oos)
-            throws IOException
+                throws IOException
         {
             oos.writeObject(this.username);
             oos.writeObject(this.password);
         }
 
         private void readObject(java.io.ObjectInputStream ois)
-            throws IOException, ClassNotFoundException
+                throws IOException, ClassNotFoundException
         {
             this.username = (String) ois.readObject();
             this.password = (String) ois.readObject();
@@ -260,7 +260,7 @@ public class TestAuth extends UnitTestCommon
     doTestSSH() throws Exception
     {
         String[] sshurls = {
-            "https://" + TestDir.remoteTestServer + "/dts/b31.dds"
+                "https://" + TestDir.remoteTestServer + "/dts/b31.dds"
         };
 
         System.err.println("*** Testing: Simple Https");
@@ -296,13 +296,13 @@ public class TestAuth extends UnitTestCommon
     }
 
     protected AuthDataBasic[] basictests = {
-        new AuthDataBasic("http://" + TestDir.remoteTestServer + "/thredds/dodsC/restrict/testData.nc.dds",
-            "tiggeUser", "tigge"),
+            new AuthDataBasic("http://" + TestDir.remoteTestServer + "/thredds/dodsC/restrict/testData.nc.dds",
+                    "tiggeUser", "tigge"),
     };
 
     protected AuthDataBasic[] redirecttests = {
-        new AuthDataBasic("http://" + redirectTestServer + "/thredds/dodsC/restrict/testData.nc.dds",
-            "tiggUser", "tigge"),
+            new AuthDataBasic("http://" + redirectTestServer + "/thredds/dodsC/restrict/testData.nc.dds",
+                    "tiggUser", "tigge"),
     };
 
     protected void
@@ -314,15 +314,14 @@ public class TestAuth extends UnitTestCommon
             return;
         }
 
-        if(DEBUG)
-            HTTPSession.debugHeaders(true);
-
         for(AuthDataBasic data : basictests) {
             HTTPCachingProvider.clearCache();
             TestProvider provider = new TestProvider(data.user, data.password);
             System.err.println("*** URL: " + data.url);
             // Test local credentials provider
             HTTPSession session = HTTPFactory.newSession(data.url);
+            if(DEBUG)
+                session.debugHeaders(true);
             session.setCredentialsProvider(provider);
             HTTPMethod method = HTTPFactory.Get(session);
             int status = method.execute();
@@ -359,14 +358,14 @@ public class TestAuth extends UnitTestCommon
             return;
         }
 
-        if(DEBUG)
-            HTTPSession.debugHeaders(true);
-
         for(AuthDataBasic data : basictests) {
             Credentials cred = new UsernamePasswordCredentials(data.user, data.password);
             System.err.println("*** URL: " + data.url);
             // Test local credentials provider
             HTTPSession session = HTTPFactory.newSession(data.url);
+            if(DEBUG)
+                session.debugHeaders(true);
+
             session.setCredentials(HTTPAuthPolicy.BASIC, cred);
 
             HTTPMethod method = HTTPFactory.Get(session);
@@ -379,7 +378,7 @@ public class TestAuth extends UnitTestCommon
                 // Test global credentials provider
                 URI uri = new URI(data.url);
                 AuthScope scope
-                    = HTTPAuthScope.uriToScope(HTTPAuthPolicy.BASIC, uri, null);
+                        = HTTPAuthScope.uriToScope(HTTPAuthPolicy.BASIC, uri, null);
                 HTTPSession.setGlobalCredentials(scope, cred);
                 session = HTTPFactory.newSession(data.url);
                 method = HTTPFactory.Get(session);
@@ -426,7 +425,7 @@ public class TestAuth extends UnitTestCommon
             if(removed.size() == 1) {
                 HTTPCachingProvider.Triple triple = removed.get(0);
                 pass = (triple.scope.getScheme().equals(HTTPAuthPolicy.BASIC.toUpperCase())
-                    && triple.creds instanceof UsernamePasswordCredentials);
+                        && triple.creds instanceof UsernamePasswordCredentials);
             } else
                 pass = false;
 
@@ -454,13 +453,13 @@ public class TestAuth extends UnitTestCommon
         // Clear the cache and the global authstore
         HTTPAuthStore.DEFAULTS.clear();
         HTTPCachingProvider.clearCache();
-        if(DEBUG)
-            HTTPSession.debugHeaders(true);
 
         for(AuthDataBasic data : basictests) {
             Credentials cred = new UsernamePasswordCredentials(data.user, data.password);
             System.err.println("*** URL: " + data.url);
             HTTPSession session = HTTPFactory.newSession(data.url);
+            if(DEBUG)
+                session.debugHeaders(true);
             session.setCredentials(HTTPAuthPolicy.BASIC, cred);
             HTTPMethod method = HTTPFactory.Get(session);
             int status = method.execute();
@@ -480,14 +479,14 @@ public class TestAuth extends UnitTestCommon
             System.err.println("Test suppressed");
             return;
         }
-        if(DEBUG)
-            HTTPSession.debugHeaders(true);
 
         for(AuthDataBasic data : redirecttests) {
             Credentials cred = new UsernamePasswordCredentials(data.user, data.password);
             System.err.println("*** URL: " + data.url);
             // Test local credentials provider
             HTTPSession session = HTTPFactory.newSession(data.url);
+            if(DEBUG)
+                session.debugHeaders(true);
             session.setCredentials(HTTPAuthPolicy.BASIC, cred);
             HTTPMethod method = HTTPFactory.Get(session);
             int status = method.execute();
@@ -507,7 +506,7 @@ public class TestAuth extends UnitTestCommon
                 // Test global credentials provider
                 URI uri = new URI(data.url);
                 AuthScope scope
-                    = HTTPAuthScope.uriToScope(HTTPAuthPolicy.BASIC, uri, null);
+                        = HTTPAuthScope.uriToScope(HTTPAuthPolicy.BASIC, uri, null);
                 HTTPSession.setGlobalCredentials(scope, cred);
                 session = HTTPFactory.newSession(data.url);
                 method = HTTPFactory.Get(session);
@@ -560,7 +559,7 @@ public class TestAuth extends UnitTestCommon
         CredentialsProvider provider = new HTTPSSLProvider(keystore, CLIENTPWD);
         URI uri = new URI(url);
         AuthScope scope
-            = HTTPAuthScope.uriToScope(HTTPAuthPolicy.SSL, uri, null);
+                = HTTPAuthScope.uriToScope(HTTPAuthPolicy.SSL, uri, null);
         HTTPSession.setGlobalCredentialsProvider(scope, provider);
 
         HTTPSession session = HTTPFactory.newSession(url);
@@ -592,10 +591,10 @@ public class TestAuth extends UnitTestCommon
         Credentials cred2 = new UsernamePasswordCredentials("u2", "pwd2");
         AuthScope scope;
         String testurl1 =
-            //no longer exists: "http://ceda.ac.uk/dap/neodc/casix/seawifs_plankton/data/monthly/PSC_monthly_1998.nc.dds",
-            "https://" + TestDir.remoteTestServer + "/dts/b31.dds";
-        String testurl2 = "http://ceda.ac.uk";
-
+                //no longer exists: "http://ceda.ac.uk/dap/neodc/casix/seawifs_plankton/data/monthly/PSC_monthly_1998.nc.dds",
+                "https://" + TestDir.remoteTestServer + "/dts/b31.dds";
+        String testurl2 =
+                "http://ceda.ac.uk";
         scope = new AuthScope(testurl1, AuthScope.ANY_PORT, AuthScope.ANY_REALM, HTTPAuthPolicy.BASIC);
 
         // Add some entries to an HTTPAuthStore
@@ -629,7 +628,7 @@ public class TestAuth extends UnitTestCommon
             HTTPAuthStore.Entry match = null;
             for(HTTPAuthStore.Entry newrow : newrows) {
                 if(HTTPAuthScope.equivalent(row.scope, newrow.scope)
-                    && row.provider.getClass() == newrow.provider.getClass()) {
+                        && row.provider.getClass() == newrow.provider.getClass()) {
                     if(match == null)
                         match = newrow;
                     else {

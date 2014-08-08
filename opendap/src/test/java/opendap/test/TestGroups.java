@@ -32,6 +32,7 @@
 
 package opendap.test;
 
+import ucar.httpservices.HTTPSession;
 import ucar.nc2.dods.DODSNetcdfFile;
 import ucar.nc2.util.UnitTestCommon;
 import ucar.nc2.util.rc.RC;
@@ -70,6 +71,7 @@ public class TestGroups extends UnitTestCommon
         // Check if user specified server.
         testserver = TestDir.dap2TestServer;
         definetestcases();
+        HTTPSession.setGlobalDebugHeaders(true);
     }
 
     void

@@ -164,11 +164,13 @@ public class HttpClientManager
     static public String getUrlContentsAsString(HTTPSession session, String urlencoded, int maxKbytes) throws IOException {
         HTTPSession useSession = session;
         try {
-            if(useSession == null) { useSession = HTTPFactory.newSession(urlencoded); }
+            if(useSession == null) {
+		useSession = HTTPFactory.newSession(urlencoded);
+	    }
 
             try (HTTPMethod m = HTTPFactory.Get(useSession,urlencoded)) {
                 m.setFollowRedirects(true);
-                m.setRequestHeader("Accept-Encoding", "gzip,deflate");
+                m.setAllowCompression();
 
                 int status = m.execute();
                 if (status != 200) {
@@ -177,28 +179,8 @@ public class HttpClientManager
 
                 String charset = m.getResponseCharSet();
                 if (charset == null) charset = "UTF-8";
-
-                // check for deflate and gzip compression
-                Header h = m.getResponseHeader("content-encoding");
-                String encoding = (h == null) ? null : h.getValue();
-
-                if (encoding != null && encoding.equals("deflate")) {
-                    byte[] body = m.getResponseAsBytes();
-                    InputStream is = new BufferedInputStream(new InflaterInputStream(new ByteArrayInputStream(body)), 10000);
-                    if (useSession != null) {useSession.close();}
-                    return readContents(is, charset, maxKbytes);
-
-                } else if (encoding != null && encoding.equals("gzip")) {
-                    byte[] body = m.getResponseAsBytes();
-                    InputStream is = new BufferedInputStream(new GZIPInputStream(new ByteArrayInputStream(body)), 10000);
-                    if (useSession != null) {useSession.close();}
-                    return readContents(is, charset, maxKbytes);
-
-                } else {
-                    byte[] body = m.getResponseAsBytes(maxKbytes * 1000);
-                    if (useSession != null) {useSession.close();}
-                    return new String(body, charset);
-                }
+                byte[] body = m.getResponseAsBytes(maxKbytes * 1000);
+                return new String(body, charset);
             }
         } finally {
             if((session == null) && (useSession != null))
@@ -228,34 +210,17 @@ public class HttpClientManager
             if(useSession == null)
                 useSession = HTTPFactory.newSession(urlencoded);
 
-            HTTPMethod m = HTTPFactory.Get(useSession, urlencoded);
-            m.setRequestHeader("Accept-Encoding", "gzip,deflate");
+            try (HTTPMethod m = HTTPFactory.Get(useSession, urlencoded)) {
+                m.setAllowCompression();
+                int status = m.execute();
+                if(status != 200)
+                    throw new IOException("failed status = " + status);
 
-            int status = m.execute();
+	        String charset = m.getResponseCharSet();
+                if (charset == null) charset = "UTF-8";
 
-            if(status != 200) {
-                throw new IOException("failed status = " + status);
-            }
-
-            String charset = m.getResponseCharSet();
-            if (charset == null) charset = "UTF-8";
-
-            // check for deflate and gzip compression
-            Header h = m.getResponseHeader("content-encoding");
-            String encoding = (h == null) ? null : h.getValue();
-
-            if(encoding != null && encoding.equals("deflate")) {
-                InputStream is = new BufferedInputStream(new InflaterInputStream(m.getResponseAsStream()), 10000);
-                IO.writeToFile(is, file.getPath());
-
-            } else if(encoding != null && encoding.equals("gzip")) {
-                InputStream is = new BufferedInputStream(new GZIPInputStream(m.getResponseAsStream()), 10000);
-                IO.writeToFile(is, file.getPath());
-
-            } else {
                 IO.writeToFile(m.getResponseAsStream(), file.getPath());
-            }
-
+	    }
         } finally {
             if((session == null) && (useSession != null))
                 useSession.close();
@@ -275,10 +240,11 @@ public class HttpClientManager
         long nbytes = 0;
 
         try {
-          if(useSession == null) { useSession = HTTPFactory.newSession(urlencoded); }
+          if(useSession == null)
+	      useSession = HTTPFactory.newSession(urlencoded);
 
           try(HTTPMethod m = HTTPFactory.Get(useSession, urlencoded)) {
-            m.setRequestHeader("Accept-Encoding", "gzip,deflate");
+            m.setAllowCompression();
             m.setRequestHeader("Range", "bytes=" + start + "-" + end);
 
             int status = m.execute();
@@ -289,19 +255,8 @@ public class HttpClientManager
             String charset = m.getResponseCharSet();
             if (charset == null) charset = "UTF-8";
 
-            // check for deflate and gzip compression
-            Header h = m.getResponseHeader("content-encoding");
-            String encoding = (h == null) ? null : h.getValue();
+            nbytes = IO.appendToFile(m.getResponseAsStream(), file.getPath());
 
-            if (encoding != null && encoding.equals("deflate")) {
-              InputStream is = new BufferedInputStream(new InflaterInputStream(m.getResponseAsStream()), 10000);
-              nbytes = IO.appendToFile(is, file.getPath());
-            } else if (encoding != null && encoding.equals("gzip")) {
-              InputStream is = new BufferedInputStream(new GZIPInputStream(m.getResponseAsStream()), 10000);
-              nbytes = IO.appendToFile(is, file.getPath());
-            } else {
-              nbytes = IO.appendToFile(m.getResponseAsStream(), file.getPath());
-            }
           }
         } finally {
             if (session == null && useSession != null) {
@@ -309,7 +264,6 @@ public class HttpClientManager
                 useSession.close();
             }
         }
-
         return nbytes;
     }
 

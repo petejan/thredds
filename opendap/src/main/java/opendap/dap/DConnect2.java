@@ -258,29 +258,29 @@ public class DConnect2
             method = HTTPFactory.Get(_session);
 
             if(acceptCompress)
-                method.setRequestHeader("Accept-Encoding", "deflate,gzip");
+                _session.setAllowCompression();
 
             // enable sessions
             if(allowSessions)
                 method.setRequestHeader("X-Accept-Session", "true");
 
-                int statusCode = method.execute();
+            int statusCode = method.execute();
 
-                // debug
-                // if (debugHeaders) ucar.httpservices.HttpClientManager.showHttpRequestInfo(f, method);
+            // debug
+            // if (debugHeaders) ucar.httpservices.HttpClientManager.showHttpRequestInfo(f, method);
 
-                switch (statusCode) {
-                case HttpStatus.SC_OK:
-                    break;
+            switch (statusCode) {
+            case HttpStatus.SC_OK:
+                break;
 
-                case HttpStatus.SC_NOT_FOUND:
-                    throw new DAP2Exception(DAP2Exception.NO_SUCH_FILE, method.getStatusText() + ": " + urlString);
-                case HttpStatus.SC_UNAUTHORIZED:
-                    throw new InvalidCredentialsException(method.getStatusText());
+            case HttpStatus.SC_NOT_FOUND:
+                throw new DAP2Exception(DAP2Exception.NO_SUCH_FILE, method.getStatusText() + ": " + urlString);
+            case HttpStatus.SC_UNAUTHORIZED:
+                throw new InvalidCredentialsException(method.getStatusText());
 
-                default:
-                    throw new DAP2Exception("Method failed:" + method.getStatusText() + " on URL= " + urlString);
-                }
+            default:
+                throw new DAP2Exception("Method failed:" + method.getStatusText() + " on URL= " + urlString);
+            }
 
             // Get the response body.
             is = method.getResponseAsStream();
@@ -300,6 +300,7 @@ public class DConnect2
 
             checkHeaders(method);
 
+/* Obsoleted by httpservices
             // check for deflator
             Header h = method.getResponseHeader("content-encoding");
             String encoding = (h == null) ? null : h.getValue();
@@ -311,6 +312,7 @@ public class DConnect2
             } else if(encoding != null && encoding.equals("gzip")) {
                 is = new BufferedInputStream(new GZIPInputStream(is), 1000);
             }
+*/
 
             command.process(is);
 

@@ -37,8 +37,6 @@ import org.apache.http.Header;
 
 import java.io.*;
 import java.net.URI;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.InflaterInputStream;
 import java.util.Map;
 import java.util.HashMap;
 
@@ -54,7 +52,6 @@ public class HttpUriResolver {
   private URI uri;
   private int connectionTimeout;
   private int socketTimeout;
-  private String contentEncoding = "gzip,deflate";
   private boolean allowContentEncoding;
   private boolean followRedirects;
 
@@ -88,10 +85,6 @@ public class HttpUriResolver {
 
   public int getSocketTimeout() {
     return this.socketTimeout;
-  }
-
-  public String getContentEncoding() {
-    return this.contentEncoding;
   }
 
   public boolean getAllowContentEncoding() {
@@ -152,6 +145,7 @@ public class HttpUriResolver {
       throw new IllegalStateException("Request has not been made.");
 
     InputStream is = method.getResponseAsStream();
+    /* no longer needed
     Header contentEncodingHeader = method.getResponseHeader("Content-Encoding");
     if (contentEncodingHeader != null) {
       String contentEncoding = contentEncodingHeader.getValue();
@@ -162,31 +156,26 @@ public class HttpUriResolver {
           return new InflaterInputStream(is);
       }
     }
+    */
     return is;
   }
 
-  private HTTPMethod getHttpResponse(URI uri) throws IOException {
-
-    HTTPMethod method = null;
-    try {
-      method = HTTPFactory.Get(uri.toString());
-      method.getSession().setConnectionTimeout(this.connectionTimeout);
-      method.getSession().setSoTimeout(this.socketTimeout);
-      method.setFollowRedirects(this.followRedirects);
-      method.setRequestHeader("Accept-Encoding", this.contentEncoding);
+  private HTTPMethod getHttpResponse( URI uri )
+          throws IOException, HTTPException
+  {
+    try (HTTPMethod method = HTTPFactory.Get(uri.toString())) {
+      method.getSession().setConnectionTimeout( this.connectionTimeout );
+      method.getSession().setSoTimeout( this.socketTimeout );
+      method.setFollowRedirects( this.followRedirects );
+      if(allowContentEncoding)
+        method.setAllowCompression();
 
       method.execute();
       int statusCode = method.getStatusCode();
-      if (statusCode == 200 || statusCode == 201) {
+      if ( statusCode == 200 || statusCode == 201 )
+      {
         return method;
       }
-
-      method.execute();
-      return method;
-
-    } catch (Throwable t) {
-      if (method != null) method.close();
-      throw t;
     }
   }
 }
