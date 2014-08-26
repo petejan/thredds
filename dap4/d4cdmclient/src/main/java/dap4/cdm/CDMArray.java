@@ -26,5 +26,4 @@ public interface CDMArray
     public long getByteSize();
     public DapType getBaseType();
     public AtomicType getPrimitiveType();
-    public List<Range> getRanges();
 }
