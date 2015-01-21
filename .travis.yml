@@ -3,8 +3,6 @@ sudo: false
 
 jdk:
   - oraclejdk7
-  - oraclejdk8
-  - openjdk7
 
 env:
   global:
@@ -12,16 +10,14 @@ env:
 
 before_install:
   - cp ${TRAVIS_BUILD_DIR}/travis/settings.xml ${HOME}/.m2
+  - wget http://atm.ucar.edu/thredds/catalog.xml
+  - cat catalog.xml
 
 install:
   - mvn install -DskipTests=true
 
 script:
   - cd cdm && mvn test ${MAVEN_OPTS}
-  - cd ../udunits && mvn test ${MAVEN_OPTS}
-  - cd ../ui && mvn test ${MAVEN_OPTS}
-  - cd ../waterml && mvn test ${MAVEN_OPTS}
-    #- cd ../dap4/d4tests && mvn test ${MAVEN_OPTS}
 
 cache:
   directories:
