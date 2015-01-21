@@ -10,11 +10,11 @@ env:
 
 before_install:
   - ip addr show
-  - wget http://thredds-test.unidata.ucar.edu/thredds/catalog.xml
-  - wget http://thredds-dev.unidata.ucar.edu/thredds/catalog.xml
-  - /sbin/traceroute atm.ucar.edu
-  - wget http://thredds.ucar.edu/thredds/catalog.xml
-  - wget http://atm.ucar.edu/thredds/catalog.xml
+  - hostname -I
+  - curl -v http://thredds-test.unidata.ucar.edu/thredds/catalog.xml
+  - curl -v http://thredds-dev.unidata.ucar.edu/thredds/catalog.xml
+  - curl -v http://thredds.ucar.edu/thredds/catalog.xml
+  - curl -v http://atm.ucar.edu/thredds/catalog.xml
 
 install:
   - mvn install -DskipTests=true
