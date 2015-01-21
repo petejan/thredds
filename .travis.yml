@@ -9,15 +9,12 @@ env:
     - MAVEN_OPTS="-Djna.library.path=${TRAVIS_BUILD_DIR}/travis -DskipTests=false -DfailIfNoTests=false"
 
 before_install:
-  - cp ${TRAVIS_BUILD_DIR}/travis/settings.xml ${HOME}/.m2
-  - wget http://thredds.ucar.edu/thredds/catalog.xml
-  - cat catalog.xml
-  - wget http://thredds-test.unidata.ucar.edu/thredds/catalog.xml
-  - wget http://thredds-dev.unidata.ucar.edu/thredds/catalog.xml
   - ip addr show
   - traceroute atm.ucar.edu
+  - wget http://thredds.ucar.edu/thredds/catalog.xml
+  - wget http://thredds-test.unidata.ucar.edu/thredds/catalog.xml
+  - wget http://thredds-dev.unidata.ucar.edu/thredds/catalog.xml
   - wget http://atm.ucar.edu/thredds/catalog.xml
-  - cat catalog.xml
 
 install:
   - mvn install -DskipTests=true
