@@ -10,10 +10,10 @@ env:
 
 before_install:
   - ip addr show
-  - traceroute atm.ucar.edu
-  - wget http://thredds.ucar.edu/thredds/catalog.xml
   - wget http://thredds-test.unidata.ucar.edu/thredds/catalog.xml
   - wget http://thredds-dev.unidata.ucar.edu/thredds/catalog.xml
+  - /sbin/traceroute atm.ucar.edu
+  - wget http://thredds.ucar.edu/thredds/catalog.xml
   - wget http://atm.ucar.edu/thredds/catalog.xml
 
 install:
