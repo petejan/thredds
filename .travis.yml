@@ -9,13 +9,11 @@ env:
     - MAVEN_OPTS="-Djna.library.path=${TRAVIS_BUILD_DIR}/travis -DskipTests=false -DfailIfNoTests=false"
 
 before_install:
-  - echo GET / | nc -vv thredds-test.unidata.ucar.edu 80
-  - echo GET / | nc -vv atm.ucar.edu 80
-  - curl -v http://thredds-test.unidata.ucar.edu/thredds/catalog.xml
+        #- curl -v http://thredds-test.unidata.ucar.edu/thredds/catalog.xml
   - curl -v http://thredds-dev.unidata.ucar.edu/thredds/catalog.xml
-  - curl -v http://comet.ucar.edu
-  - curl -v http://unidata2-new.ssec.wisc.edu/thredds/catalog.xml
-  - curl -v http://atm.ucar.edu
+    #- curl -v http://comet.ucar.edu
+    #- curl -v http://unidata2-new.ssec.wisc.edu/thredds/catalog.xml
+  - curl --trace --no-keepalive http://atm.ucar.edu
   - curl -v http://threddsRC.ucar.edu
   - curl -v http://threddsBackup.ucar.edu
     #- curl -v https://thredds.ucar.edu
