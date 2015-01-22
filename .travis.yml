@@ -13,6 +13,8 @@ before_install:
   - curl -v http://thredds-dev.unidata.ucar.edu/thredds/catalog.xml
   - curl -v http://comet.ucar.edu
   - curl -v http://unidata2-new.ssec.wisc.edu/thredds/catalog.xml
+  - curl -v http://threddsRC.ucar.edu
+  - curl -v http://threddsBackup.ucar.edu
     #- curl -v https://thredds.ucar.edu
   - curl -v http://thredds.ucar.edu
   - curl -v http://thredds.ucar.edu/thredds/catalog.xml
