@@ -13,6 +13,7 @@ before_install:
   - hostname -I
   - curl -v http://thredds-test.unidata.ucar.edu/thredds/catalog.xml
   - curl -v http://thredds-dev.unidata.ucar.edu/thredds/catalog.xml
+  - curl -v http://comet.ucar.edu
   - curl -v http://thredds.ucar.edu/thredds/catalog.xml
   - curl -v http://atm.ucar.edu/thredds/catalog.xml
 
