@@ -33,6 +33,34 @@
 
 package ucar.httpservices;
 
+import org.apache.http.*;
+import org.apache.http.annotation.NotThreadSafe;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.Credentials;
+import org.apache.http.client.CredentialsProvider;
+import org.apache.http.client.entity.DeflateDecompressingEntity;
+import org.apache.http.client.entity.GzipDecompressingEntity;
+import org.apache.http.client.params.AllClientPNames;
+import org.apache.http.conn.scheme.Scheme;
+import org.apache.http.cookie.Cookie;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.*;
+import org.apache.http.impl.conn.PoolingClientConnectionManager;
+import org.apache.http.params.SyncBasicHttpParams;
+import org.apache.http.protocol.*;
+
+import javax.net.ssl.SSLException;
+import java.io.IOException;
+import java.io.InterruptedIOException;
+import java.net.*;
+import java.nio.charset.UnsupportedCharsetException;
+import java.util.*;
+
+import static ucar.httpservices.HTTPAuthScope.*;
+import static org.apache.http.auth.AuthScope.*;
+
+
 /**
  * A session is encapsulated in an instance of the class
  * HTTPSession.  The encapsulation is with respect to a specific url
@@ -174,7 +202,7 @@ public class HTTPSession implements AutoCloseable
             synchronized (RetryHandler.class) {
                 if(executionCount >= retries)
                     return false;
-	    }
+            }
             if((exception instanceof InterruptedIOException) // Timeout
                 || (exception instanceof UnknownHostException)
                 || (exception instanceof ConnectException) // connection refused
@@ -197,7 +225,7 @@ public class HTTPSession implements AutoCloseable
         static public synchronized void setRetries(int retries)
         {
             if(retries > 0)
-                RetryHandler.retries = retries;
+		RetryHandler.retries = retries;
         }
 
         static public synchronized boolean getVerbose()
@@ -210,7 +238,7 @@ public class HTTPSession implements AutoCloseable
             RetryHandler.verbose = tf;
         }
     }
-    */
+
 
     static class GZIPResponseInterceptor implements HttpResponseInterceptor
     {
@@ -268,9 +296,8 @@ public class HTTPSession implements AutoCloseable
     // instance for global and one for local.
 
     static protected Settings globalsettings;
-
-    static List<HttpRequestInterceptor> reqintercepts = new ArrayList<HttpRequestInterceptor>();
-    static List<HttpResponseInterceptor> rspintercepts = new ArrayList<HttpResponseInterceptor>();
+    static protected List<HttpRequestInterceptor> reqintercepts = new ArrayList<HttpRequestInterceptor>();
+    static protected List<HttpResponseInterceptor> rspintercepts = new ArrayList<HttpResponseInterceptor>();
 
     static {
         connmgr = new PoolingClientConnectionManager();
@@ -398,13 +425,13 @@ public class HTTPSession implements AutoCloseable
     static public void
     setGlobalCredentialsProvider(AuthScope scope, CredentialsProvider provider)
     {
-        defineCredentialsProvider(ANY_PRINCIPAL, scope, provider, HTTPAuthStore.getDefaults);
+        defineCredentialsProvider(ANY_PRINCIPAL, scope, provider, HTTPAuthStore.getDefault());
     }
 
     static public void
     setGlobalCredentialsProvider(CredentialsProvider provider)
     {
-        defineCredentialsProvider(ANY_PRINCIPAL, HTTPAuthScope.ANY, provider, HTTPAuthStore.getDefaults());
+        defineCredentialsProvider(ANY_PRINCIPAL, HTTPAuthScope.ANY, provider, HTTPAuthStore.getDefault());
     }
 
     // It is convenient to be able to directly set the Credentials
@@ -427,6 +454,7 @@ public class HTTPSession implements AutoCloseable
     {
         RetryHandler.setRetries(count);
     }
+
 
     //////////////////////////////////////////////////
     // Static Utility functions
@@ -491,28 +519,28 @@ public class HTTPSession implements AutoCloseable
     static public String
     getUrlAsString(String url) throws HTTPException
     {
-	try (
-	    HTTPSession session = HTTPFactory.newSession(url);
+        try (
+            HTTPSession session = HTTPFactory.newSession(url);
             HTTPMethod m = HTTPFactory.Get(session)) {
             int status = m.execute();
             String content = null;
             if(status == 200) {
                 content = m.getResponseAsString();
-	    }
+            }
             return content;
-	} 
+        }
     }
 
     static public int
     putUrlAsString(String content, String url) throws HTTPException
     {
-	int status = 0;
-	try {
+        int status = 0;
+        try {
             try (HTTPMethod m = HTTPFactory.Put(url)) {
                 m.setRequestContent(new StringEntity(content,
                         ContentType.create("application/text", "UTF-8")));
                 status = m.execute();
-	    }
+            }
         } catch (UnsupportedCharsetException uce) {
             throw new HTTPException(uce);
         }
@@ -611,13 +639,16 @@ public class HTTPSession implements AutoCloseable
     protected String legalurl = null;
     protected boolean closed = false;
     protected Settings localsettings = new Settings();
-    protected HttpContext execcontext = null; // same instance must be used for all methods
     protected HTTPAuthStore authlocal =  HTTPAuthStore.getDefault();
+
     // We currently only allow the use of global interceptors
     protected List<Object> intercepts = new ArrayList<Object>(); // current set of interceptors;
 
+    protected HttpContext execcontext = null; // same instance must be used for all methods
+
     // cached and recreated as needed
     protected CloseableHttpClient cachedclient = null;
+    protected boolean cachedclientinvalid = true;
 
     //////////////////////////////////////////////////
     // Constructor(s)
@@ -653,34 +684,18 @@ public class HTTPSession implements AutoCloseable
     // Interceptors
 
     synchronized void
-    setInterceptors()
+    setInterceptors(HttpClientBuilder builder)
     {
-        if(cachedclient == null)
-            return;
         for(HttpRequestInterceptor hrq : reqintercepts)
-            cachedclient.addRequestInterceptor(hrq);
+            builder.addInterceptorLast(hrq);
         for(HttpResponseInterceptor hrs : rspintercepts)
-            cachedclient.addResponseInterceptor(hrs);
+            builder.addInterceptorLast(hrs);
     }
 
     synchronized void
     clearInterceptors()
     {
-        for(HttpRequestInterceptor hrq : reqintercepts)
-            clearInterceptor(hrq);
-        for(HttpResponseInterceptor hrs : rspintercepts)
-            clearInterceptor(hrs);
-    }
-
-    synchronized void
-    clearInterceptor(Object o)
-    {
-        if(cachedclient == null)
-            return;
-        if(o instanceof HttpResponseInterceptor)
-            cachedclient.removeResponseInterceptorByClass(((HttpResponseInterceptor) o).getClass());
-        if(o instanceof HttpRequestInterceptor)
-            cachedclient.removeRequestInterceptorByClass(((HttpRequestInterceptor) o).getClass());
+        cachedclientinvalid = true;
     }
 
     //////////////////////////////////////////////////
@@ -695,8 +710,8 @@ public class HTTPSession implements AutoCloseable
     public void
     setAuthStore(HTTPAuthStore store)
     {
-	if(store == null) store = HTTPAuthStore.getDefault();
-	this.authlocal = store;
+       if(store == null) store = HTTPAuthStore.getDefault();
+       this.authlocal = store;
     }
 
     public Settings getSettings()
@@ -735,6 +750,7 @@ public class HTTPSession implements AutoCloseable
     {
         return this.execcontext;
     }
+
 
     HttpClient
     getClient()
@@ -788,7 +804,7 @@ public class HTTPSession implements AutoCloseable
     public void clearState()
     {
         if(cachedclient == null)
-            return;
+           return;
         cachedclient.getCredentialsProvider().clear();
         cachedclient.getCookieStore().clear();
         localsettings.clear();
@@ -876,7 +892,7 @@ public class HTTPSession implements AutoCloseable
     setAuthentication(HTTPCachingProvider hap)
     {
         if(this.cachedclient != null)
-            this.cachedclient.setCredentialsProvider(hap);
+	    this.cachedclient.setCredentialsProvider(hap);
         if(false)
             this.execcontext.setAttribute(ClientContext.CREDS_PROVIDER, hap);
     }
@@ -890,17 +906,15 @@ public class HTTPSession implements AutoCloseable
     {
         // Ensure that the client related objects exist
         ensureHttpClient();
-
         HttpHost target = requestHost();
         CloseableHttpResponse response = cachedclient.execute(target, this.execcontext);
-        return response;
+	return response;
     }
 
     protected void ensureHttpClient()
     {
         if(this.cachedclient != null)
             return;
-
 /*
     ssl.TrustManagerFactory.algorithm
     javax.net.ssl.trustStoreType
@@ -921,8 +935,6 @@ public class HTTPSession implements AutoCloseable
     http.maxConnections
     http.agent
 */
-
-
     }
 
     //////////////////////////////////////////////////
@@ -986,7 +998,7 @@ public class HTTPSession implements AutoCloseable
             if(hr instanceof HTTPUtil.InterceptCommon)
                 reqintercepts.remove(i);
         }
-        for(int i=rspintercepts.size()-1;i>=0;i--) {
+        for(int i = rspintercepts.size() - 1;i >= 0;i--) {
             HttpResponseInterceptor hr = rspintercepts.get(i);
             if(hr instanceof HTTPUtil.InterceptCommon)
                 rspintercepts.remove(i);

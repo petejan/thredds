@@ -46,12 +46,11 @@ import org.apache.http.auth.AuthScope;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.*;
-import org.apache.http.impl.client.*;
-import org.apache.http.impl.conn.DefaultProxyRoutePlanner;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.message.BasicHttpResponse;
 import org.apache.http.util.EntityUtils;
 
+import static org.apache.http.auth.AuthScope.*;
 import static ucar.httpservices.HTTPSession.*;
 
 /**
@@ -326,11 +325,11 @@ public class HTTPMethod implements AutoCloseable
         RequestConfig.Builder rb = RequestConfig.custom();
         for(String key : merge.getNames()) {
             Object value = merge.getParameter(key);
-            boolean tf = (value instanceof Boolean:(Boolean) value:false);
+            boolean tf = (value instanceof Boolean?(Boolean) value:false);
             if(key.equals(ALLOW_CIRCULAR_REDIRECTS)) {
                 rb.setCircularRedirectsAllowed(tf);
             } else if(key.equals(HANDLE_REDIRECTS)) {
-                rb.setRedirectsEnabled(tf)
+                rb.setRedirectsEnabled(tf);
                 rb.setRelativeRedirectsAllowed(tf);
             } else if(key.equals(HANDLE_AUTHENTICATION)) {
                 rb.setAuthenticationEnabled(tf);
