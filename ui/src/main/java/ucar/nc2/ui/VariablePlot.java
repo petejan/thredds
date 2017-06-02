@@ -37,6 +37,7 @@ import java.awt.*;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
@@ -130,7 +131,7 @@ public class VariablePlot extends JPanel {
   NetcdfFile file;
 
   public void setDataset(NetcdfFile ncFile) {
-	  log.info("setDataset");
+	  log.info(ncFile.getTitle());
 	  file = ncFile;	  
   }
   
@@ -164,23 +165,44 @@ public class VariablePlot extends JPanel {
     log.info("variable " + v.getShortName());
 
     AbstractIntervalXYDataset dataset = null;
-
-    Dimension dim = v.getDimension(0);
-    String dimName = dim.getShortName();
-
+    XYPlot p = chart.getXYPlot();
     Attribute title = file.findGlobalAttribute("title");
     if (title != null)
       chart.setTitle(title.getStringValue());
     
-    Variable varXdim = file.findVariable(null, dimName);
-    boolean hasXdim = false;
+    // locate the longest dimension, we'll make that the X dimension
+    List <Dimension> dims = v.getDimensions();
+    int maxDim = 0;
+    int iMaxDim = 0;
+
+    for(int i=0;i<dims.size();i++)
+    {
+    	int len = dims.get(i).getLength();
+    	if (len > maxDim)
+    	{
+    		maxDim = dims.get(i).getLength();
+    		iMaxDim = i;
+    		maxDim = len;
+    	}
+    }
+    
+    Dimension xDim = dims.get(iMaxDim);
+    String xDimName = xDim.getShortName();
+
+    // remove the X dimension, so we can plot all the rest
+    //dims.remove(iMaxDim);
+    
+    log.info("Max Dimension " + iMaxDim + " size " + maxDim + " number dimensions " + dims.size());
+    
+    // is the X dim a coordinate variable
+    boolean xDimIsCoordinateVar = false;
+    Variable varXdim = file.findVariable(null, xDimName);
     if (varXdim != null)
-    	hasXdim = true;
+    	xDimIsCoordinateVar = true;
     
     boolean xIsTime = false;
 
-    XYPlot p = chart.getXYPlot();
-    if (hasXdim)
+    if (xDimIsCoordinateVar)
     {
 	    Attribute xUnit = varXdim.findAttribute("units");
 	    Attribute xAxis = varXdim.findAttribute("axis");
@@ -193,7 +215,7 @@ public class VariablePlot extends JPanel {
 	    if (xUnit != null)
 	    	p.getDomainAxis().setLabel(xUnit.getStringValue());
 	    else
-	    	p.getDomainAxis().setLabel(dimName);
+	    	p.getDomainAxis().setLabel(xDimName);
 
         if (xAxis != null)
 	        log.info("X axis type " + xUnit.getDataType() + " value " + xUnit.toString() + " is Time " + xIsTime);
@@ -248,7 +270,7 @@ public class VariablePlot extends JPanel {
     List<CalendarDate> dates = null;
     Array varXarray = null;
     
-    if (hasXdim)
+    if (xDimIsCoordinateVar)
     {
     	varXarray = varXdim.read();
 	    if (xIsTime)
@@ -263,58 +285,76 @@ public class VariablePlot extends JPanel {
     Index idx = a.getIndex();
     idx.setCurrentCounter(0);
 
-    int d2 = 1;
-    int rank = idx.getRank();
-    for (int k = 1; k < rank; k++) {
-      d2 *= idx.getShape(k);
+    // calculate number of elements in remaining
+    List <Dimension> nonXDim = new ArrayList<Dimension>();
+    
+    int remaingDimensionSize = 1;
+    for (int k = 0; k < dims.size(); k++) {
+      if (k != iMaxDim)
+      {
+    	  nonXDim.add(dims.get(k));
+    	  remaingDimensionSize *= dims.get(k).getLength();
+      }
     }
-    log.info("variable : " + v.getShortName() + " : dims " + v.getDimensionsString() + " rank " + rank + " d2 " + d2);
+    log.info("variable : " + v.getShortName() + " : dims " + v.getDimensionsString() + " remaing dimension size " + remaingDimensionSize);
 
     double max = -1000;
     double min = 1000;
 
-    for (int j = 0; j < d2; j++) {
-      if (rank > 1)
-        idx.set1(j); // this wont work for 3rd dimension > 1
-      
-      String name = v.getShortName();
-      if (d2 > 1)
-        name += "-" + j;
-
-      Series s1;
-      if (xIsTime)
-    	  s1 = new TimeSeries(name);
-      else
-    	  s1 = new XYSeries(name);
-      
-      for (int i = 0; i < idx.getShape(0); i++) {
-        idx.set0(i);
-        float f = a.getFloat(idx);
-        if (f != dfill) {
-        	if (!Float.isNaN(f))
-        	{
-	        	max = Math.max(max,  f);
-	        	min = Math.min(min,  f);
-        	}
-        	if (xIsTime)
-        	{
-        		Date ts = new Date(dates.get(i).getMillis());
-        		((TimeSeries)s1).addOrUpdate(new Second(ts), f);
-        	}
-        	else if (hasXdim)
-        	{
-        		((XYSeries)s1).addOrUpdate(varXarray.getDouble(i), f);        		
-        	}
-        	else
-        	{
-        		((XYSeries)s1).addOrUpdate(i, f);        		        		
-        	}
-        }
-      }
-	  if (dataset instanceof TimeSeriesCollection)		  
-		  ((TimeSeriesCollection)dataset).addSeries((TimeSeries)s1);
-	  if (dataset instanceof XYSeriesCollection)		  
-		  ((XYSeriesCollection)dataset).addSeries((XYSeries)s1);
+    // Iterate over all the other dimensions (which are not the longest)
+    int nDims = nonXDim.size();
+    if (nDims == 0) 
+    	nDims = 1;
+    for (int k = 0; k < nDims; k++)
+    {
+    	int dimLen = 1;
+    	if (nonXDim.size() != 0)
+    		dimLen = nonXDim.get(k).getLength();
+    	
+	    for (int j = 0; j < dimLen; j++) {
+	      log.info("dim " + k + " n " + j);
+	      
+	      idx.setDim(k,  j);
+	      
+	      String name = v.getShortName();
+	      if (remaingDimensionSize > 1)
+	        name += "-" + j;
+	
+	      Series s1;
+	      if (xIsTime)
+	    	  s1 = new TimeSeries(name);
+	      else
+	    	  s1 = new XYSeries(name);
+	      
+	      for (int i = 0; i < idx.getShape(iMaxDim); i++) {
+	        idx.setDim(iMaxDim, i);
+	        float f = a.getFloat(idx);
+	        if (f != dfill) {
+	        	if (!Float.isNaN(f))
+	        	{
+		        	max = Math.max(max,  f);
+		        	min = Math.min(min,  f);
+	        	}
+	        	if (xIsTime)
+	        	{
+	        		Date ts = new Date(dates.get(i).getMillis());
+	        		((TimeSeries)s1).addOrUpdate(new Second(ts), f);
+	        	}
+	        	else if (xDimIsCoordinateVar)
+	        	{
+	        		((XYSeries)s1).addOrUpdate(varXarray.getDouble(i), f);        		
+	        	}
+	        	else
+	        	{
+	        		((XYSeries)s1).addOrUpdate(i, f);        		        		
+	        	}
+	        }
+	      }
+		  if (dataset instanceof TimeSeriesCollection)		  
+			  ((TimeSeriesCollection)dataset).addSeries((TimeSeries)s1);
+		  if (dataset instanceof XYSeriesCollection)		  
+			  ((XYSeriesCollection)dataset).addSeries((XYSeries)s1);
+	    }
     }
     final XYLineAndShapeRenderer renderer1 = new XYLineAndShapeRenderer(true, false); 
     p.setRenderer(ax, renderer1);
